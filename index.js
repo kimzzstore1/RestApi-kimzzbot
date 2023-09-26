@@ -16,6 +16,11 @@ var favicon = require('serve-favicon')
 var path = require('path')
 var cookieParser = require('cookie-parser');
 var createError = require('http-errors')
+
+const { User } = require('./database/model')
+const { checkUsername, checkAdmin } = require('./database/db');
+const { isAuthenticated } = require('./lib/auth');
+const { connectMongoDb } = require('./database/connect');
 require('./settings')
 
 
@@ -38,6 +43,28 @@ app.use(cookieParser());
 app.use(express.static("public"))
 app.use('/', main)
 app.use('/api', api)
+
+app.get('/view/listuser', isAuthenticated, async (req, res) => {
+  let { username, email } = req.user
+  let List = await User.find({})
+  if (username !=='kimzzstore') return res.redirect('/docs');
+  res.render('view/listuser', {
+       List,
+       username,
+       email,
+       layout: 'view/listuser'
+  })
+})
+
+app.get('/view/index', isAuthenticated, async(req, res) => {
+  let { username, email } = req.user
+  if (username !=='kimzzstore') return res.redirect('/docs');
+  res.render('view/index', {
+       username,
+       email,
+       layout: 'view/index'
+  })
+})
 
 app.use(function (req, res, next) {
 	next(createError(404))
